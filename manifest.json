@@ -1,9 +1,9 @@
 {
-  "name": "Arbeitszeit Tracker",
+  "name": "ZeitTracker Privat",
   "short_name": "Zeit",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#22c55e",
+  "background_color": "#f1f5f9",
+  "theme_color": "#2563eb",
   "icons": [{ "src": "https://via.placeholder.com/192", "sizes": "192x192", "type": "image/png" }]
 }
