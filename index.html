@@ -3,58 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Zeit</title>
+    <title>ZeitTracker Privat</title>
     <link rel="manifest" href="./manifest.json">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; }
-      .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-      .timer { font-size: 3.5rem; text-align: center; margin: 20px 0; font-family: monospace; font-weight: bold; color: #1a1a1a; }
-      .status-label { text-align: center; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 10px; }
-      .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        button { padding: 15px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; transition: background 0.2s; }
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
-      .btn-start { background: #22c55e; color: white; grid-column: span 2; }
-      .btn-pause { background: #f59e0b; color: white; }
-      .btn-stop { background: #ef4444; color: white; }
-      .btn-csv { background: #64748b; color: white; grid-column: span 2; margin-top: 10px; }
-      .stats { margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; }
-      .stats-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        :root { --primary: #2563eb; --success: #22c55e; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+      .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+      .timer { font-size: 3.5rem; font-weight: 800; text-align: center; margin: 20px 0; font-family: monospace; color: #0f172a; }
+      .status-badge { text-align: center; font-weight: bold; padding: 5px 12px; border-radius: 20px; display: inline-block; width: fit-content; margin: 0 auto 10px; font-size: 0.8rem; }
+      .idle { background: #e2e8f0; color: #64748b; }
+      .working { background: #dcfce7; color: #166534; }
+      .paused { background: #fef3c7; color: #92400e; }
+      .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        button { padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: transform 0.1s, opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+        button:active { transform: scale(0.95); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+      .btn-start { background: var(--success); color: white; grid-column: span 2; }
+      .btn-pause { background: var(--warning); color: white; }
+      .btn-stop { background: var(--danger); color: white; }
+      .btn-csv { background: #64748b; color: white; width: 100%; margin-top: 15px; }
+      .stats { margin-top: 25px; border-top: 2px solid #f1f5f9; padding-top: 15px; }
+      .stat-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.95rem; }
+      .debug-log { font-size: 0.7rem; color: #94a3b8; margin-top: 20px; width: 100%; max-width: 400px; max-height: 100px; overflow-y: auto; background: #fff; padding: 5px; border-radius: 5px; }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <div id="status" class="status-label">BEREIT</div>
+        <center><div id="status" class="status-badge idle">BEREIT</div></center>
         <div class="timer" id="display">00:00:00</div>
         
         <div class="controls">
-            <button class="btn-start" id="startBtn" onclick="clockIn()">START</button>
+            <button class="btn-start" id="startBtn" onclick="clockIn()">ARBEIT STARTEN</button>
             <button class="btn-pause" id="pauseBtn" onclick="togglePause()" disabled>PAUSE</button>
             <button class="btn-stop" id="stopBtn" onclick="clockOut()" disabled>STOPP</button>
-            <button class="btn-csv" onclick="exportCSV()">CSV EXPORT</button>
         </div>
 
-        <div class="stats" id="statsArea">
-            <strong>Fortschreibung (Netto):</strong>
-            <div id="statsContent" style="margin-top:10px;">Lade Daten...</div>
+        <button class="btn-csv" onclick="exportCSV()">CSV EXPORT (.csv)</button>
+
+        <div class="stats" id="statsContainer">
+            <strong>Fortschreibung:</strong>
+            <div id="statsContent" style="margin-top:8px;">Lade...</div>
         </div>
+        
+        <button style="background:none; color:#cbd5e1; font-size:0.6rem; border:none; margin-top:20px; width:100%;" onclick="clearData()">Daten löschen</button>
     </div>
 
-    <script>
-        // HIER WAR DER FEHLER: Korrekte Initialisierung des Speichers
-        let entries = JSON.parse(localStorage.getItem('time_tracker_v1') |
+    <div id="debug" class="debug-log">Log: App initialisiert...</div>
 
-| '');
+    <script>
+        // KORREKTE INITIALISIERUNG
+        let entries =;
+        try {
+            const saved = localStorage.getItem('arbeitszeit_data_v2');
+            entries = saved? JSON.parse(saved) :;
+            log("Daten geladen: " + entries.length + " Einträge");
+        } catch(e) {
+            log("Fehler beim Laden: " + e.message);
+            entries =;
+        }
+
         let timerInterval;
 
+        function log(msg) {
+            const d = document.getElementById('debug');
+            d.innerText += "\n> " + msg;
+            d.scrollTop = d.scrollHeight;
+        }
+
         function save() {
-            localStorage.setItem('time_tracker_v1', JSON.stringify(entries));
+            localStorage.setItem('arbeitszeit_data_v2', JSON.stringify(entries));
             renderStats();
         }
 
         function clockIn() {
             if (entries.length > 0 &&!entries[entries.length-1].end) return;
             entries.push({ type: 'WORK', start: Date.now(), end: null });
-            updateUI('WORKING');
+            log("Start Arbeit");
+            updateUI();
             save();
         }
 
@@ -64,11 +90,13 @@
 
 | last.end) return;
             
-            last.end = Date.now();
-            const nextType = (last.type === 'WORK')? 'BREAK' : 'WORK';
-            entries.push({ type: nextType, start: Date.now(), end: null });
+            const now = Date.now();
+            last.end = now;
+            const newType = (last.type === 'WORK')? 'BREAK' : 'WORK';
+            entries.push({ type: newType, start: now, end: null });
             
-            updateUI(nextType === 'BREAK'? 'PAUSED' : 'WORKING');
+            log("Wechsel zu: " + newType);
+            updateUI();
             save();
         }
 
@@ -77,40 +105,49 @@
             if (last &&!last.end) {
                 last.end = Date.now();
             }
-            updateUI('IDLE');
+            log("Stopp Arbeit");
+            updateUI();
             save();
         }
 
-        function updateUI(state) {
+        function updateUI() {
+            const last = (entries.length > 0)? entries[entries.length - 1] : null;
+            const isRunning = last &&!last.end;
+            
             const startBtn = document.getElementById('startBtn');
             const pauseBtn = document.getElementById('pauseBtn');
             const stopBtn = document.getElementById('stopBtn');
             const statusLabel = document.getElementById('status');
 
-            if (state === 'IDLE') {
+            if (!isRunning) {
                 startBtn.disabled = false;
                 pauseBtn.disabled = true;
                 stopBtn.disabled = true;
                 statusLabel.innerText = "BEREIT";
-                statusLabel.style.color = "#666";
+                statusLabel.className = "status-badge idle";
                 clearInterval(timerInterval);
                 document.getElementById('display').innerText = "00:00:00";
             } else {
                 startBtn.disabled = true;
                 pauseBtn.disabled = false;
                 stopBtn.disabled = false;
-                pauseBtn.innerText = (state === 'PAUSED')? 'WEITER' : 'PAUSE';
-                statusLabel.innerText = (state === 'PAUSED')? 'PAUSE' : 'ARBEIT';
-                statusLabel.style.color = (state === 'PAUSED')? '#f59e0b' : '#22c55e';
                 
+                const isPaused = (last.type === 'BREAK');
+                statusLabel.innerText = isPaused? "IN PAUSE" : "AM ARBEITEN";
+                statusLabel.className = "status-badge " + (isPaused? "paused" : "working");
+                pauseBtn.innerText = isPaused? "WEITER" : "PAUSE";
+
                 clearInterval(timerInterval);
                 timerInterval = setInterval(updateTimerDisplay, 1000);
+                updateTimerDisplay();
             }
         }
 
         function updateTimerDisplay() {
             const last = entries[entries.length - 1];
-            if (!last) return;
+            if (!last |
+
+| last.end) return;
             const diff = Date.now() - last.start;
             const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
             const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -120,50 +157,61 @@
 
         function renderStats() {
             const now = new Date();
+            const startOfDay = new Date().setHours(0,0,0,0);
+            const startOfWeek = new Date().setDate(now.getDate() - now.getDay() + (now.getDay() === 0? -6 : 1));
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
             let totals = { day: 0, week: 0, month: 0 };
 
             entries.forEach(e => {
                 if (e.type === 'WORK' && e.end) {
-                    const d = new Date(e.start);
-                    const duration = e.end - e.start;
-                    if (d.toDateString() === now.toDateString()) totals.day += duration;
-                    // Vereinfachte Wochenprüfung
-                    if (now - d < 7 * 86400000) totals.week += duration;
-                    if (d.getMonth() === now.getMonth()) totals.month += duration;
+                    const dur = e.end - e.start;
+                    if (e.start >= startOfDay) totals.day += dur;
+                    if (e.start >= startOfWeek) totals.week += dur;
+                    if (e.start >= startOfMonth) totals.month += dur;
                 }
             });
 
             document.getElementById('statsContent').innerHTML = `
-                <div class="stats-row"><span>Heute:</span> <strong>${(totals.day/3600000).toFixed(2)}h</strong></div>
-                <div class="stats-row"><span>Diese Woche:</span> <strong>${(totals.week/3600000).toFixed(2)}h</strong></div>
-                <div class="stats-row"><span>Diesen Monat:</span> <strong>${(totals.month/3600000).toFixed(2)}h</strong></div>
+                <div class="stat-row"><span>Heute:</span> <b>${(totals.day/3600000).toFixed(2)}h</b></div>
+                <div class="stat-row"><span>Woche:</span> <b>${(totals.week/3600000).toFixed(2)}h</b></div>
+                <div class="stat-row"><span>Monat:</span> <b>${(totals.month/3600000).toFixed(2)}h</b></div>
             `;
         }
 
         function exportCSV() {
+            if (entries.length === 0) return alert("Keine Daten vorhanden.");
             let csv = "\ufeffDatum;Typ;Start;Ende;Dauer(Min)\n";
             entries.forEach(e => {
                 const dur = e.end? Math.round((e.end - e.start) / 60000) : 0;
-                csv += `${new Date(e.start).toLocaleDateString()};${e.type};${new Date(e.start).toLocaleTimeString()};${e.end? new Date(e.end).toLocaleTimeString() : '-'};${dur}\n`;
+                const d = new Date(e.start);
+                csv += `${d.toLocaleDateString()};${e.type};${d.toLocaleTimeString()};${e.end? new Date(e.end).toLocaleTimeString() : '-'};${dur}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
+            link.href = url;
             link.download = `Zeiterfassung_${new Date().toISOString().split('T')}.csv`;
             link.click();
+            log("CSV Export gestartet");
         }
 
-        // Automatischer Resume beim Neuladen
-        if (entries.length > 0 &&!entries[entries.length-1].end) {
-            updateUI(entries[entries.length-1].type === 'WORK'? 'WORKING' : 'PAUSED');
-        } else {
-            renderStats();
+        function clearData() {
+            if (confirm("Alle Daten wirklich löschen?")) {
+                entries =;
+                save();
+                updateUI();
+                log("Speicher geleert");
+            }
         }
 
+        // Service Worker mit Fehlerbehandlung
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
+            navigator.serviceWorker.register('./sw.js').catch(e => log("SW Fehler: " + e.message));
         }
+
+        updateUI();
+        renderStats();
     </script>
 </body>
 </html>
-
