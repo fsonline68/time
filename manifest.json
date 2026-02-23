@@ -1,5 +1,5 @@
 {
-  "name": "ZeitTracker Privat",
+  "name": "ZeitTracker",
   "short_name": "Zeit",
   "start_url": "./index.html",
   "display": "standalone",
