@@ -51,7 +51,7 @@
             entries = JSON.parse(data);
         }
     } catch (e) {
-        entries =;
+        entries = []; // Fixed: Syntax error, should be an empty array
     }
 
     let timerInterval;
@@ -62,7 +62,7 @@
     }
 
     function clockIn() {
-        if (entries.length > 0 &&!entries[entries.length - 1].end) return;
+        if (entries.length > 0 && !entries[entries.length - 1].end) return;
         entries.push({ type: 'WORK', start: Date.now(), end: null });
         updateUI();
         save();
@@ -70,13 +70,11 @@
 
     function togglePause() {
         const last = entries[entries.length - 1];
-        if (!last |
-
-| last.end) return;
+        if (!last || last.end) return; // Fixed: Syntax error `| |` to `||` and logical check
         
         const now = Date.now();
         last.end = now;
-        const nextType = (last.type === 'WORK')? 'BREAK' : 'WORK';
+        const nextType = (last.type === 'WORK') ? 'BREAK' : 'WORK';
         entries.push({ type: nextType, start: now, end: null });
         
         updateUI();
@@ -85,7 +83,7 @@
 
     function clockOut() {
         const last = entries[entries.length - 1];
-        if (last &&!last.end) {
+        if (last && !last.end) {
             last.end = Date.now();
         }
         updateUI();
@@ -93,12 +91,12 @@
     }
 
     function updateUI() {
-        const last = entries.length > 0? entries[entries.length - 1] : null;
-        const isRunning = last &&!last.end;
+        const last = entries.length > 0 ? entries[entries.length - 1] : null;
+        const isRunning = last && !last.end;
         
         document.getElementById('startBtn').disabled = isRunning;
-        document.getElementById('pauseBtn').disabled =!isRunning;
-        document.getElementById('stopBtn').disabled =!isRunning;
+        document.getElementById('pauseBtn').disabled = !isRunning;
+        document.getElementById('stopBtn').disabled = !isRunning;
 
         const label = document.getElementById('statusLabel');
         if (!isRunning) {
@@ -108,9 +106,9 @@
             document.getElementById('display').innerText = "00:00:00";
         } else {
             const isPaused = (last.type === 'BREAK');
-            label.innerText = isPaused? "PAUSE" : "ARBEIT";
-            label.className = "status " + (isPaused? "paused" : "working");
-            document.getElementById('pauseBtn').innerText = isPaused? "WEITER" : "PAUSE";
+            label.innerText = isPaused ? "PAUSE" : "ARBEIT";
+            label.className = "status " + (isPaused ? "paused" : "working");
+            document.getElementById('pauseBtn').innerText = isPaused ? "WEITER" : "PAUSE";
             
             clearInterval(timerInterval);
             timerInterval = setInterval(tick, 1000);
@@ -120,9 +118,7 @@
 
     function tick() {
         const last = entries[entries.length - 1];
-        if (!last |
-
-| last.end) return;
+        if (!last || last.end) return; // Fixed: Syntax error `| |` to `||` and logical check
         const diff = Date.now() - last.start;
         const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -146,8 +142,8 @@
         let csv = "\ufeffDatum;Typ;Start;Ende;Dauer(Min)\n";
         entries.forEach(e => {
             const d = new Date(e.start);
-            const dur = e.end? Math.round((e.end - e.start) / 60000) : 0;
-            csv += d.toLocaleDateString() + ";" + e.type + ";" + d.toLocaleTimeString() + ";" + (e.end? new Date(e.end).toLocaleTimeString() : "-") + ";" + dur + "\n";
+            const dur = e.end ? Math.round((e.end - e.start) / 60000) : 0;
+            csv += d.toLocaleDateString() + ";" + e.type + ";" + d.toLocaleTimeString() + ";" + (e.end ? new Date(e.end).toLocaleTimeString() : "-") + ";" + dur + "\n";
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -167,5 +163,4 @@
 </script>
 </body>
 </html>
-
 
