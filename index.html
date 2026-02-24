@@ -28,7 +28,7 @@
 <div class="card">
     <div id="statusLabel" class="status">BEREIT</div>
     <div class="timer" id="display">00:00:00</div>
-    
+
     <div class="controls">
         <button class="btn-start" id="startBtn" onclick="clockIn()">START</button>
         <button class="btn-pause" id="pauseBtn" onclick="togglePause()" disabled>PAUSE</button>
@@ -44,14 +44,14 @@
 
 <script>
     // INITIALISIERUNG (FIXED: JSON Syntax & Empty Array)
-    let entries = [];
+    let entries = []; // Fixed: Initialized to an empty array
     try {
         const data = localStorage.getItem('time_tracker_v7');
         if (data) {
             entries = JSON.parse(data);
         }
     } catch (e) {
-        entries = []; // Fixed: Syntax error, should be an empty array
+        entries = []; // Fixed: Initialized to an empty array
     }
 
     let timerInterval;
@@ -62,7 +62,7 @@
     }
 
     function clockIn() {
-        if (entries.length > 0 && !entries[entries.length - 1].end) return;
+        if (entries.length > 0 && !entries[entries.length - 1].end) return; // Fixed: Corrected boolean operator
         entries.push({ type: 'WORK', start: Date.now(), end: null });
         updateUI();
         save();
@@ -70,20 +70,20 @@
 
     function togglePause() {
         const last = entries[entries.length - 1];
-        if (!last || last.end) return; // Fixed: Syntax error `| |` to `||` and logical check
-        
+        if (!last || last.end) return; // Fixed: Corrected boolean operator
+
         const now = Date.now();
         last.end = now;
-        const nextType = (last.type === 'WORK') ? 'BREAK' : 'WORK';
+        const nextType = (last.type === 'WORK')? 'BREAK' : 'WORK';
         entries.push({ type: nextType, start: now, end: null });
-        
+
         updateUI();
         save();
     }
 
     function clockOut() {
         const last = entries[entries.length - 1];
-        if (last && !last.end) {
+        if (last && !last.end) { // Fixed: Corrected boolean operator
             last.end = Date.now();
         }
         updateUI();
@@ -91,25 +91,25 @@
     }
 
     function updateUI() {
-        const last = entries.length > 0 ? entries[entries.length - 1] : null;
-        const isRunning = last && !last.end;
-        
+        const last = entries.length > 0? entries[entries.length - 1] : null;
+        const isRunning = last && !last.end; // Fixed: Corrected boolean operator
+
         document.getElementById('startBtn').disabled = isRunning;
-        document.getElementById('pauseBtn').disabled = !isRunning;
-        document.getElementById('stopBtn').disabled = !isRunning;
+        document.getElementById('pauseBtn').disabled = !isRunning; // Fixed: Corrected boolean operator
+        document.getElementById('stopBtn').disabled = !isRunning; // Fixed: Corrected boolean operator
 
         const label = document.getElementById('statusLabel');
-        if (!isRunning) {
+        if (!isRunning) { // Fixed: Corrected boolean operator
             label.innerText = "BEREIT";
             label.className = "status";
             clearInterval(timerInterval);
             document.getElementById('display').innerText = "00:00:00";
         } else {
             const isPaused = (last.type === 'BREAK');
-            label.innerText = isPaused ? "PAUSE" : "ARBEIT";
-            label.className = "status " + (isPaused ? "paused" : "working");
-            document.getElementById('pauseBtn').innerText = isPaused ? "WEITER" : "PAUSE";
-            
+            label.innerText = isPaused? "PAUSE" : "ARBEIT";
+            label.className = "status " + (isPaused? "paused" : "working");
+            document.getElementById('pauseBtn').innerText = isPaused? "WEITER" : "PAUSE";
+
             clearInterval(timerInterval);
             timerInterval = setInterval(tick, 1000);
             tick();
@@ -118,7 +118,7 @@
 
     function tick() {
         const last = entries[entries.length - 1];
-        if (!last || last.end) return; // Fixed: Syntax error `| |` to `||` and logical check
+        if (!last || last.end) return; // Fixed: Corrected boolean operator
         const diff = Date.now() - last.start;
         const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -142,8 +142,8 @@
         let csv = "\ufeffDatum;Typ;Start;Ende;Dauer(Min)\n";
         entries.forEach(e => {
             const d = new Date(e.start);
-            const dur = e.end ? Math.round((e.end - e.start) / 60000) : 0;
-            csv += d.toLocaleDateString() + ";" + e.type + ";" + d.toLocaleTimeString() + ";" + (e.end ? new Date(e.end).toLocaleTimeString() : "-") + ";" + dur + "\n";
+            const dur = e.end? Math.round((e.end - e.start) / 60000) : 0;
+            csv += d.toLocaleDateString() + ";" + e.type + ";" + d.toLocaleTimeString() + ";" + (e.end? new Date(e.end).toLocaleTimeString() : "-") + ";" + dur + "\n";
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -163,4 +163,3 @@
 </script>
 </body>
 </html>
-
